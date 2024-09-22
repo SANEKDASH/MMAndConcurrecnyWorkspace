@@ -1,0 +1,1 @@
+add_executable(default_compile_test default_compile_test.cpp)

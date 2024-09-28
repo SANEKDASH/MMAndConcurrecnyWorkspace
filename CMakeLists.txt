@@ -13,9 +13,21 @@ set(PROJECT_BINARY_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(CMAKE_CXX_FLAGS -pthread)
+
+
 # Cody style
 include(cmake/ClangTidy.cmake)
 
-# Allcators
+# Testing framework 
+include(cmake/TestFramework.cmake)
+
+# include root for clear include path usage
 include_directories(${PROJECT_ROOT})
-add_subdirectory(${PROJECT_ROOT}/allocator)
+
+# Testing 
+add_subdirectory(${PROJECT_ROOT}/bump_pointer_allocator)

@@ -33,6 +33,11 @@ function(add_gtest)
   add_executable(${TEST_NAME} ${TEST_SOURCES})
   target_link_libraries(${TEST_NAME} PRIVATE GTest::GTest ${TEST_LIBS})
 
+  if(PROJECT_USE_ASAN)
+    target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address)
+    target_link_options(${TEST_NAME} PRIVATE -fsanitize=address)
+  endif()
+
   add_custom_target(
     ${TEST_NAME}_run
     COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TEST_NAME}

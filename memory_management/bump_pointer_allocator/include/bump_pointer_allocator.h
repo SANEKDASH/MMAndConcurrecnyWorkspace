@@ -1,7 +1,8 @@
-#ifndef BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H
-#define BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H
+#ifndef MEMORY_MANAGEMENT_BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H
+#define MEMORY_MANAGEMENT_BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H
 
 #include <cstddef>  // is used for size_t
+#include <cstdint>
 #include "base/macros.h"
 
 template <size_t MEMORY_POOL_SIZE>
@@ -10,7 +11,7 @@ public:
     BumpPointerAllocator() = default;
     ~BumpPointerAllocator() = default;
 
-    template <class T>
+    template <class T = uint8_t>
     T *Allocate([[maybe_unused]] size_t count)  // TODO: remove [[maybe_unused]]
     {
         // TODO: Add your implementation here...
@@ -36,4 +37,4 @@ private:
     // TODO: Add your fields and methods here...
 };
 
-#endif  // BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H
+#endif  // MEMORY_MANAGEMENT_BUMP_POINTER_ALLOCATOR_INCLUDE_BUMP_POINTER_ALLOCATOR_H

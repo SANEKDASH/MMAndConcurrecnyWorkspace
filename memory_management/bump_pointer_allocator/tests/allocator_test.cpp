@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <cstddef>
-#include "bump_pointer_allocator/include/bump_pointer_allocator.h"
+#include "memory_management/bump_pointer_allocator/include/bump_pointer_allocator.h"
 
 TEST(BumpAllocatorTest, DISABLED_TemplateAllocationTest)  // remove DISABLED_ prefix to use test
 {

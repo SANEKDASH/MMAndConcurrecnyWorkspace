@@ -13,6 +13,16 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
 enable_testing()
 
+# Use this target to build all gtests you added
+add_custom_target(
+  build_all_gtests
+)
+
+# Use this target to build and run all gtests you added
+add_custom_target(
+  run_all_gtests
+)
+
 function(add_gtest)
   set(one_value_args NAME)
   set(multi_value_args SOURCES LIBS)
@@ -27,6 +37,16 @@ function(add_gtest)
     ${TEST_NAME}_run
     COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TEST_NAME}
     DEPENDS ${TEST_NAME}
+  )
+
+  add_dependencies(
+    build_all_gtests
+    ${TEST_NAME}
+  )
+
+  add_dependencies(
+    run_all_gtests
+    ${TEST_NAME}_run
   )
 
 endfunction()

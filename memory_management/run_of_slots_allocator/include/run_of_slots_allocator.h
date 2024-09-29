@@ -17,31 +17,33 @@ class RunOfSlotsAllocator {
 public:
     RunOfSlotsAllocator() = default;
     ~RunOfSlotsAllocator() = default;
+    NO_MOVE_SEMANTIC(RunOfSlotsAllocator);
+    NO_COPY_SEMANTIC(RunOfSlotsAllocator);
 
     template <class T = uint8_t>
     T *Allocate()
     {
-        // TODO: Add your implementation here...
+        // TODO(you): Add your implementation here...
         return nullptr;
     }
 
     void Free(void *ptr)
     {
-        // TODO: Add your implementation here...
+        // TODO(you): Add your implementation here...
     }
 
     /**
      * @brief Method should check in @param ptr is pointer to mem from this allocator
      * @returns true if ptr is from this allocator
      */
-    bool VerifyPtr([[maybe_unused]] void *ptr)  // TODO: remove [[maybe_unused]]
+    bool VerifyPtr([[maybe_unused]] void *ptr)  // TODO(you): remove [[maybe_unused]]
     {
-        // TODO: Add your implementation here...
+        // TODO(you): Add your implementation here...
         return false;
     }
 
 private:
-    // TODO: Add your fields and methods here...
+    // TODO(you): Add your fields and methods here...
 };
 
 #endif  // MEMORY_MANAGEMENT_RUN_OF_SLOTS_ALLOCATOR_INCLUDE_RUN_OF_SLOTS_ALLOCATOR_H

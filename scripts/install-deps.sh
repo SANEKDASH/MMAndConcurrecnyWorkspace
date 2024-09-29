@@ -7,4 +7,4 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 apt update  
-apt install g++ cmake clang-format # you can add new programms here
+apt install g++ cmake clang-format clang-tidy-14 # you can add new programms here

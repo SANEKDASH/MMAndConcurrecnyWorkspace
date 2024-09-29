@@ -281,7 +281,7 @@ def need_to_ignore_file(file_path: str, project_dir: str, build_dir: str) -> boo
         return True
 
     # Skip third_party.
-    regexp = re.compile(".*/third_party/.*")
+    regexp = re.compile(".*/_deps/.*")
     if regexp.search(file_path):
         return True
 

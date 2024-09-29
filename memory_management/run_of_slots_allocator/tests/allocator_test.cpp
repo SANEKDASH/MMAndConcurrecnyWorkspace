@@ -5,8 +5,8 @@
 
 TEST(BumpAllocatorTest, DISABLED_TemplateAllocationTest)  // remove DISABLED_ prefix to use test
 {
-    constexpr size_t MemoryPoolSize = 4048U;
-    RunOfSlotsAllocator<MemoryPoolSize, 1U, 2U, 4U, 8U> allocator;
+    constexpr size_t MEMORY_POOL_SIZE = 4048U;
+    RunOfSlotsAllocator<MEMORY_POOL_SIZE, 1U, 2U, 4U, 8U> allocator;
 
     auto *size1 = allocator.Allocate<size_t>();
     auto *size2 = allocator.Allocate<size_t>();
@@ -20,7 +20,7 @@ TEST(BumpAllocatorTest, DISABLED_TemplateAllocationTest)  // remove DISABLED_ pr
     ASSERT_NE(int1, nullptr);
     ASSERT_TRUE(allocator.VerifyPtr(int1));
     size_t pointDiff = (size_t(size2) > size_t(int1)) ? size_t(size2) - size_t(int1) : size_t(int1) - size_t(size2);
-    ASSERT_GE(pointDiff, MemoryPoolSize);  // in different pools
+    ASSERT_GE(pointDiff, MEMORY_POOL_SIZE);  // in different pools
 
     allocator.Free(size1);
     allocator.Free(size2);
@@ -29,13 +29,14 @@ TEST(BumpAllocatorTest, DISABLED_TemplateAllocationTest)  // remove DISABLED_ pr
 
 TEST(BumpAllocatorTest, DISABLED_AllocatorMemPoolOverflowTest)  // remove DISABLED_ prefix to use test
 {
-    constexpr size_t MemoryPoolSize = 8U;
-    RunOfSlotsAllocator<MemoryPoolSize, 1U, 2U, 4U, 8U> allocator;
+    constexpr size_t MEMORY_POOL_SIZE = 8U;
+    RunOfSlotsAllocator<MEMORY_POOL_SIZE, 1U, 2U, 4U, 8U> allocator;
 
     auto *mem = allocator.Allocate<size_t>();
     ASSERT_NE(mem, nullptr);
     ASSERT_TRUE(allocator.VerifyPtr(mem));
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     ASSERT_FALSE(allocator.VerifyPtr(mem + 1U));  // in should be false becase you can not allocate mem with 0 size
     ASSERT_EQ(allocator.Allocate<size_t>(), nullptr);
 

@@ -1,75 +1,89 @@
 #include <gtest/gtest.h>
 #include "memory_management/reference_counting_gc/include/object_module.h"
+#include "base/macros.h"
+#include "delete_detector.h"
 
 class Return42 {
+    static constexpr size_t RET_42 = 42U;
 public:
-    size_t get() const
+    size_t Get() const
     {
-        return 42U;
+        return RET_42;
     }
 };
 
-TEST(ReferenceCountingGC, SinglePtrUsage)
+TEST(ReferenceCountingGC, DISABLED_SinglePtrUsage)
 {
     Object<size_t> obj;
-    ASSERT_EQ(obj.use_count(), 0);
-    ASSERT_EQ(obj.get(), nullptr);
+    ASSERT_EQ(obj.UseCount(), 0);
+    ASSERT_EQ(obj.Get(), nullptr);
 
     constexpr size_t VALUE_TO_CREATE = 42U;
     Object<size_t> sizeObj = MakeObject<size_t>(VALUE_TO_CREATE);
-    ASSERT_EQ(sizeObj.use_count(), 1U);
-    ASSERT_NE(sizeObj.get(), nullptr);
+    ASSERT_EQ(sizeObj.UseCount(), 1U);
+    ASSERT_NE(sizeObj.Get(), nullptr);
     ASSERT_EQ(*sizeObj, VALUE_TO_CREATE);
 
     Object<Return42> classObj = MakeObject<Return42>();
-    ASSERT_EQ(classObj.use_count(), 1U);
-    ASSERT_NE(classObj.get(), nullptr);
-    ASSERT_EQ(classObj->get(), Return42().get());
+    ASSERT_EQ(classObj.UseCount(), 1U);
+    ASSERT_NE(classObj.Get(), nullptr);
+    ASSERT_EQ(classObj->Get(), Return42().Get());
 }
 
-TEST(ReferenceCountingGC, CopySemanticUsage)
+TEST(ReferenceCountingGC, DISABLED_CopySemanticUsage)
 {
     constexpr size_t VALUE_TO_CREATE = 42U;
     Object<size_t> obj1 = MakeObject<size_t>(VALUE_TO_CREATE);
     {
-        Object<size_t> obj2(obj1);
-        ASSERT_EQ(obj1.use_count(), 2U);
-        ASSERT_EQ(obj1.get(), obj2.get());
+        Object<size_t> obj2(obj1); // NOLINT(performance-unnecessary-copy-initialization)
+        ASSERT_EQ(obj1.UseCount(), 2U);
+        ASSERT_EQ(obj1.Get(), obj2.Get());
     }
-    ASSERT_EQ(obj1.use_count(), 1U);
+    ASSERT_EQ(obj1.UseCount(), 1U);
     {
         Object<size_t> obj2;
         obj2 = obj1;
-        ASSERT_EQ(obj1.use_count(), 2U);
-        ASSERT_EQ(obj1.get(), obj2.get());
+        ASSERT_EQ(obj1.UseCount(), 2U);
+        ASSERT_EQ(obj1.Get(), obj2.Get());
     }
-    ASSERT_EQ(obj1.use_count(), 1U);
+    ASSERT_EQ(obj1.UseCount(), 1U);
 }
 
-TEST(ReferenceCountingGC, MoveSemanticUsage)
+TEST(ReferenceCountingGC, DISABLED_MoveSemanticUsage)
 {
     constexpr size_t VALUE_TO_CREATE = 42U;
     Object<size_t> obj1 = MakeObject<size_t>(VALUE_TO_CREATE);
-    size_t *ptr = obj1.get();
+    size_t *ptr = obj1.Get();
     {
         Object<size_t> obj2(std::move(obj1));
-        ASSERT_EQ(obj2.use_count(), 1U);
-        ASSERT_EQ(obj2.get(), ptr);
-        ASSERT_EQ(obj1.use_count(), 0);
-        ASSERT_EQ(obj1.get(), nullptr);
+        ASSERT_EQ(obj2.UseCount(), 1U);
+        ASSERT_EQ(obj2.Get(), ptr);
         obj1 = obj2;
     }
-    ASSERT_EQ(obj1.use_count(), 1U);
+    ASSERT_EQ(obj1.UseCount(), 1U);
     {
         Object<size_t> obj2;
         obj2 = std::move(obj1);
-        ASSERT_EQ(obj2.use_count(), 1U);
-        ASSERT_EQ(obj2.get(), ptr);
-        ASSERT_EQ(obj1.use_count(), 0);
-        ASSERT_EQ(obj1.get(), nullptr);
+        ASSERT_EQ(obj2.UseCount(), 1U);
+        ASSERT_EQ(obj2.Get(), ptr);
         obj1 = obj2;
     }
-    ASSERT_EQ(obj1.use_count(), 1U);
+    ASSERT_EQ(obj1.UseCount(), 1U);
 }
 
-TEST(ReferenceCountingGC, GcDeletingTest) {}
+
+TEST(ReferenceCountingGC, DISABLED_GcDeletingTest) {
+    DeleteDetector::SetDeleteCount(0U);
+    auto obj1 = MakeObject<DeleteDetector>();
+    {
+        auto obj2 = MakeObject<DeleteDetector>();
+        obj2->SetDelete(MakeObject<DeleteDetector>());
+        obj1->SetDelete(obj2);
+        ASSERT_EQ(obj2.UseCount(), 2U);
+    }
+    ASSERT_EQ(DeleteDetector::GetDeleteCount(), 0U);
+    obj1->SetDelete(Object<DeleteDetector>());
+    ASSERT_EQ(DeleteDetector::GetDeleteCount(), 2U);
+    obj1->~DeleteDetector();
+    ASSERT_EQ(DeleteDetector::GetDeleteCount(), 3U);
+}

@@ -7,6 +7,9 @@ sudo apt install git
 3. We will use VS Code as main IDE. There are many ways to install it. Here you can install it by hands ([link](https://code.visualstudio.com/)). Also you can use UI installer.
 4. For work you need utils that you can install using next commend:
 ```
-sudo apt install g++ cmake clang-format
+sudo apt install g++ cmake clang-format clang-tidy-14
 ```
 5. Finally we need next VS Code extentions for correct work with code: "C/C++ Extention Pack", "clangd". Also you need to install clangd server. Additionlly, you can install "vim" extention.
+
+### Tasks
+Here you can find tasks you can do. They are placed in `memory_managemend` and `concurrency` dirs. We recomend you to start with mm tasks.

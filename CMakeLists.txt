@@ -32,4 +32,6 @@ include_directories(${PROJECT_ROOT})
 # Testing 
 add_subdirectory(${PROJECT_ROOT}/memory_management/bump_pointer_allocator)
 add_subdirectory(${PROJECT_ROOT}/memory_management/run_of_slots_allocator)
+add_subdirectory(${PROJECT_ROOT}/memory_management/free_list_allocator)
 add_subdirectory(${PROJECT_ROOT}/memory_management/reference_counting_gc)
+add_subdirectory(${PROJECT_ROOT}/memory_management/reference_counting_object_modle)

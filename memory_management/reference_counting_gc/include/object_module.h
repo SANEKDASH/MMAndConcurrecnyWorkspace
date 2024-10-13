@@ -21,20 +21,26 @@ public:
     explicit Object([[maybe_unused]] T *ptr)
     {
         val_ = ptr;
-        data_header_ = new DataHeader;
-        data_header_->ref_count = 1;
+
+        dataHeader_ = new DataHeader;
+
+        dataHeader_->refCount = 1;
     }
 
     ~Object()
     {
-        if (data_header_ != nullptr)
+        if (dataHeader_ != nullptr)
         {
-            --data_header_->ref_count;
+            //NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
+            --dataHeader_->refCount;
 
-            if (data_header_->ref_count == 0)
+            if (dataHeader_->refCount == 0)
             {
-                delete data_header_;
+                delete dataHeader_;
                 delete val_;
+
+                dataHeader_ = nullptr;
+                val_        = nullptr;
             }
         }
     }
@@ -44,20 +50,20 @@ public:
     {
         val_ = other.val_;
 
-        data_header_ = other.data_header_;
+        dataHeader_ = other.dataHeader_;
 
-        ++data_header_->ref_count;
+        ++dataHeader_->refCount;
     }
     // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
     Object<T> &operator=([[maybe_unused]] const Object<T> &other)
     {
         val_ = other.val_;
 
-        if (other.data_header_ != nullptr)
+        if (other.dataHeader_ != nullptr)
         {
-            data_header_ = other.data_header_;
+            dataHeader_ = other.dataHeader_;
 
-            ++data_header_->ref_count;
+            ++dataHeader_->refCount;
         }
 
         return *this;
@@ -67,25 +73,25 @@ public:
     Object([[maybe_unused]] Object<T> &&other)
     {
         delete val_;
-        delete data_header_;
+        delete dataHeader_;
 
-        val_         = std::move(other.val_);
-        data_header_ = std::move(other.data_header_);
+        val_        = std::move(other.val_);
+        dataHeader_ = std::move(other.dataHeader_);
 
-        other.val_         = nullptr;
-        other.data_header_ = nullptr;
+        other.val_        = nullptr;
+        other.dataHeader_ = nullptr;
 
     }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
     {
         delete val_;
-        delete data_header_;
+        delete dataHeader_;
 
-        val_         = std::move(other.val_);
-        data_header_ = std::move(other.data_header_);
+        val_        = std::move(other.val_);
+        dataHeader_ = std::move(other.dataHeader_);
 
-        other.val_         = nullptr;
-        other.data_header_ = nullptr;
+        other.val_        = nullptr;
+        other.dataHeader_ = nullptr;
 
         return *this;
     }
@@ -107,9 +113,10 @@ public:
     }
     size_t UseCount() const
     {
-        if (data_header_ != nullptr)
+        if (dataHeader_ != nullptr)
         {
-            return data_header_->ref_count;
+            // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
+            return dataHeader_->refCount;
         }
 
         return 0;
@@ -118,12 +125,12 @@ public:
 private:
     struct DataHeader
     {
-        size_t ref_count = 0;
+        size_t refCount = 0;
     };
 
     T *val_ = nullptr; // this field can be deleted
 
-    DataHeader *data_header_ = nullptr;
+    DataHeader *dataHeader_ = nullptr;
 };
 
 #endif  // MEMORY_MANAGEMENT_REFERECNCE_COUNTING_GC_INCLUDE_OBJECT_MODEL_H

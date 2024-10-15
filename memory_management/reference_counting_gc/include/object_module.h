@@ -106,7 +106,20 @@ public:
     }
 
     // internal access
-    void Reset([[maybe_unused]] T *ptr) {}
+    void Reset([[maybe_unused]] T *ptr)
+    {
+        if (--dataHeader_->refCount == 0)
+        {
+            delete val_;
+            delete dataHeader_;
+        }
+
+        val_ = ptr;
+
+        dataHeader_  = new DataHeader;
+
+        dataHeader_->refCount = 1;
+    }
     T *Get() const
     {
         return val_;

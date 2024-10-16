@@ -10,7 +10,9 @@ class Object;
 template <class T, class... Args>
 static Object<T> MakeObject([[maybe_unused]] Args... args)
 {
-    return static_cast<Object<T>>(new T{args...});
+    Object<T> newObj{new T{args...}};
+
+    return newObj;
 }
 
 template <class T>
@@ -22,48 +24,40 @@ public:
     {
         val_ = ptr;
 
-        dataHeader_ = new DataHeader;
-
-        dataHeader_->refCount = 1;
+        refCount_ = new int{1};
     }
 
     ~Object()
     {
-        if (dataHeader_ != nullptr)
-        {
-            //NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-            --dataHeader_->refCount;
-
-            if (dataHeader_->refCount == 0)
-            {
-                delete dataHeader_;
-                delete val_;
-
-                dataHeader_ = nullptr;
-                val_        = nullptr;
-            }
-        }
+        Release();
     }
 
     // copy semantic
     Object([[maybe_unused]] const Object<T> &other)
     {
+        Release();
+
         val_ = other.val_;
 
-        dataHeader_ = other.dataHeader_;
+        refCount_ = other.refCount_;
 
-        ++dataHeader_->refCount;
+        if (refCount_ != nullptr)
+        {
+            ++(*refCount_);
+        }
     }
     // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
     Object<T> &operator=([[maybe_unused]] const Object<T> &other)
     {
+        Release();
+
         val_ = other.val_;
 
-        if (other.dataHeader_ != nullptr)
-        {
-            dataHeader_ = other.dataHeader_;
+        refCount_ = other.refCount_;
 
-            ++dataHeader_->refCount;
+        if (refCount_ != nullptr)
+        {
+            ++(*refCount_);
         }
 
         return *this;
@@ -72,29 +66,28 @@ public:
     // move semantic
     Object([[maybe_unused]] Object<T> &&other)
     {
-        delete val_;
-        delete dataHeader_;
+        Release();
 
-        val_        = std::move(other.val_);
-        dataHeader_ = std::move(other.dataHeader_);
+        val_      = std::move(other.val_);
+        refCount_ = std::move(other.refCount_);
 
-        other.val_        = nullptr;
-        other.dataHeader_ = nullptr;
+        other.val_      = nullptr;
+        other.refCount_ = nullptr;
 
     }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
     {
-        delete val_;
-        delete dataHeader_;
+        Release();
 
-        val_        = std::move(other.val_);
-        dataHeader_ = std::move(other.dataHeader_);
+        val_      = std::move(other.val_);
+        refCount_ = std::move(other.refCount_);
 
-        other.val_        = nullptr;
-        other.dataHeader_ = nullptr;
+        other.val_      = nullptr;
+        other.refCount_ = nullptr;
 
         return *this;
     }
+
 
     // member access operators
     T &operator*() const noexcept {
@@ -108,17 +101,11 @@ public:
     // internal access
     void Reset([[maybe_unused]] T *ptr)
     {
-        if (--dataHeader_->refCount == 0)
-        {
-            delete val_;
-            delete dataHeader_;
-        }
+        Release();
 
         val_ = ptr;
 
-        dataHeader_  = new DataHeader;
-
-        dataHeader_->refCount = 1;
+        refCount_ = new int{1};
     }
     T *Get() const
     {
@@ -126,24 +113,34 @@ public:
     }
     size_t UseCount() const
     {
-        if (dataHeader_ != nullptr)
+        if (refCount_ != nullptr)
         {
             // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-            return dataHeader_->refCount;
+            return *refCount_;
         }
 
         return 0;
     }
 
 private:
-    struct DataHeader
+    void Release()
     {
-        size_t refCount = 0;
-    };
+        if (refCount_ != nullptr)
+        {
+            if (--(*refCount_) == 0)
+            {
+                delete val_;
+                delete refCount_;
+
+                val_      = nullptr;
+                refCount_ = nullptr;
+            }
+        }
+    }
+
+    int *refCount_ = nullptr;
 
     T *val_ = nullptr; // this field can be deleted
-
-    DataHeader *dataHeader_ = nullptr;
 };
 
 #endif  // MEMORY_MANAGEMENT_REFERECNCE_COUNTING_GC_INCLUDE_OBJECT_MODEL_H

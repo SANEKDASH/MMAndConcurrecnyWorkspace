@@ -37,8 +37,7 @@ public:
     {
         Release();
 
-        val_ = other.val_;
-
+        val_      = other.val_;
         refCount_ = other.refCount_;
 
         if (refCount_ != nullptr)
@@ -51,8 +50,7 @@ public:
     {
         Release();
 
-        val_ = other.val_;
-
+        val_      = other.val_;
         refCount_ = other.refCount_;
 
         if (refCount_ != nullptr)

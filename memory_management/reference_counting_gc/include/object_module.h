@@ -35,8 +35,6 @@ public:
     // copy semantic
     Object([[maybe_unused]] const Object<T> &other)
     {
-        Release();
-
         val_      = other.val_;
         refCount_ = other.refCount_;
 
@@ -64,14 +62,11 @@ public:
     // move semantic
     Object([[maybe_unused]] Object<T> &&other)
     {
-        Release();
-
         val_      = std::move(other.val_);
         refCount_ = std::move(other.refCount_);
 
         other.val_      = nullptr;
         other.refCount_ = nullptr;
-
     }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
     {
@@ -88,11 +83,13 @@ public:
 
 
     // member access operators
-    T &operator*() const noexcept {
+    T &operator*() const noexcept
+    {
         return *val_;
     }
 
-    T *operator->() const noexcept {
+    T *operator->() const noexcept
+    {
         return val_;
     }
 

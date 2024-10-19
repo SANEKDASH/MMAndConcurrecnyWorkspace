@@ -17,9 +17,11 @@ static Object<T> MakeObject([[maybe_unused]] Args... args)
 {
     char *objPtr = new char [sizeof(DataHeader) + sizeof(T)];
 
-    T *val = new ((char *)objPtr + sizeof(DataHeader)) T{args...};
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    T *val = new (objPtr + sizeof(DataHeader)) T{args...};
 
-    ((DataHeader *) objPtr)->refCount = 1;
+//NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
+    ((DataHeader *) (objPtr))->refCount = 1;
 
     Object<T> newObj{objPtr};
 
@@ -35,11 +37,7 @@ public:
 
     explicit Object(char *objPtr)
     {
-        obj_    = objPtr;
-
-        header_ = (DataHeader *) obj_;
-
-        val_     = (T *) (obj_ + sizeof(DataHeader));
+        obj_ = objPtr;
     }
 
     explicit Object(std::nullptr_t) {}
@@ -52,13 +50,11 @@ public:
     // copy semantic
     Object([[maybe_unused]] const Object<T> &other)
     {
-        obj_    = other.obj_;
-        val_    = other.val_;
-        header_ = other.header_;
+        obj_ = other.obj_;
 
         if (obj_ != nullptr)
         {
-            ++(header_->refCount);
+            ++(((DataHeader *) obj_)->refCount);
         }
     }
     // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
@@ -66,13 +62,11 @@ public:
     {
         Release();
 
-        obj_    = other.obj_;
-        val_    = other.val_;
-        header_ = other.header_;
+        obj_ = other.obj_;
 
         if (obj_ != nullptr)
         {
-            ++(header_->refCount);
+            ++(((DataHeader *) obj_)->refCount);
         }
 
         return *this;
@@ -83,13 +77,7 @@ public:
     {
         obj_ = std::move(other.obj_);
 
-        header_ = (DataHeader *) obj_;
-
-        val_ = (T *) (obj_ + sizeof(DataHeader));
-
-        other.obj_    = nullptr;
-        other.val_       = nullptr;
-        other.header_ = nullptr;
+        other.obj_ = nullptr;
     }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
     {
@@ -97,13 +85,7 @@ public:
 
         obj_ = std::move(other.obj_);
 
-        header_ = (DataHeader *) obj_;
-
-        val_ = (T *) (obj_ + sizeof(DataHeader));
-
         other.obj_ = nullptr;
-        other.val_    = nullptr;
-        other.header_ = nullptr;
 
         return *this;
     }
@@ -111,12 +93,14 @@ public:
     // member access operators
     T &operator*() const noexcept
     {
-        return *val_;
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        return *(T *) (obj_ + sizeof(DataHeader));
     }
 
     T *operator->() const noexcept
     {
-        return val_;
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        return (T *) (obj_ + sizeof(DataHeader));
     }
 
     size_t UseCount() const
@@ -124,7 +108,7 @@ public:
         if (obj_ != nullptr)
         {
             // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
-            return header_->refCount;
+            return ((DataHeader *) obj_)->refCount;
         }
 
         return 0;
@@ -132,22 +116,22 @@ public:
 
     bool operator==([[maybe_unused]] const Object<T> other) const
     {
-        return val_ == other.val_;
+        return obj_ == other.obj_;
     }
 
     bool operator!=(const Object<T> other) const
     {
-        return !(*this == other);
+        return !(obj_ == other.obj_);
     }
 
     bool operator==(std::nullptr_t) const
     {
-        return val_ == nullptr;
+        return obj_ == nullptr;
     }
 
     bool operator!=(std::nullptr_t) const
     {
-        return val_ != nullptr;
+        return obj_ != nullptr;
     }
 
 private:
@@ -155,23 +139,20 @@ private:
     {
         if (obj_ != nullptr)
         {
-            if (--(header_->refCount) == 0)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            if (--(((DataHeader *) obj_)->refCount) == 0)
             {
-                val_->~T();
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                ((T *)(obj_ + sizeof(DataHeader)))->~T();
 
-                delete obj_;
+                delete []obj_;
 
-                val_    = nullptr;
-                header_ = nullptr;
+                obj_ = nullptr;
             }
         }
     }
 
     char *obj_ = nullptr;
-
-    T *val_ = nullptr;
-
-    DataHeader *header_ = nullptr;
 };
 
 #endif  // MEMORY_MANAGEMENT_REFERECNCE_COUNTING_GC_INCLUDE_OBJECT_MODLE_H

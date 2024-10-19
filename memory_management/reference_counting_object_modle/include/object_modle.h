@@ -17,9 +17,11 @@ static Object<T> MakeObject([[maybe_unused]] Args... args)
 {
     char *objPtr = new char [sizeof(DataHeader) + sizeof(T)];
 
-    T *val = new ((char *)objPtr + sizeof(DataHeader)) T{args...};
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    T *val = new (objPtr + sizeof(DataHeader)) T{args...};
 
-    ((DataHeader *) objPtr)->refCount = 1;
+//NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
+    ((DataHeader *) (objPtr))->refCount = 1;
 
     Object<T> newObj{objPtr};
 
@@ -37,9 +39,7 @@ public:
     {
         obj_    = objPtr;
 
-        header_ = (DataHeader *) obj_;
-
-        val_     = (T *) (obj_ + sizeof(DataHeader));
+        SetPointers();
     }
 
     explicit Object(std::nullptr_t) {}
@@ -83,12 +83,10 @@ public:
     {
         obj_ = std::move(other.obj_);
 
-        header_ = (DataHeader *) obj_;
-
-        val_ = (T *) (obj_ + sizeof(DataHeader));
+        SetPointers();
 
         other.obj_    = nullptr;
-        other.val_       = nullptr;
+        other.val_    = nullptr;
         other.header_ = nullptr;
     }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
@@ -97,11 +95,9 @@ public:
 
         obj_ = std::move(other.obj_);
 
-        header_ = (DataHeader *) obj_;
+        SetPointers();
 
-        val_ = (T *) (obj_ + sizeof(DataHeader));
-
-        other.obj_ = nullptr;
+        other.obj_    = nullptr;
         other.val_    = nullptr;
         other.header_ = nullptr;
 
@@ -151,6 +147,13 @@ public:
     }
 
 private:
+    void SetPointers()
+    {
+        header_ = (DataHeader *) obj_;
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        val_    = (T *) (obj_ + sizeof(DataHeader));
+    }
+
     void Release()
     {
         if (obj_ != nullptr)
@@ -159,7 +162,7 @@ private:
             {
                 val_->~T();
 
-                delete obj_;
+                delete []obj_;
 
                 val_    = nullptr;
                 header_ = nullptr;

@@ -2,6 +2,12 @@
 #define MEMORY_MANAGEMENT_REFERECNCE_COUNTING_OBJECT_MODLE_INCLUDE_OBJECT_MODLE_H
 
 #include <cstddef>
+#include <utility>
+
+struct DataHeader
+{
+    size_t refCount;
+};
 
 template <class T>
 class Object;
@@ -9,31 +15,96 @@ class Object;
 template <class T, class... Args>
 static Object<T> MakeObject([[maybe_unused]] Args... args)
 {
-    // TODO(you): Implement this function
-    return {};
+    char *objPtr = new char [sizeof(DataHeader) + sizeof(T)];
+
+    T *val = new ((char *)objPtr + sizeof(DataHeader)) T{args...};
+
+    ((DataHeader *) objPtr)->refCount = 1;
+
+    Object<T> newObj{objPtr};
+
+    return newObj;
 }
 
 // TODO(you): Implement object base on java object representatoin
 template <class T>
 class Object {
 public:
+
     Object() = default;
+
+    explicit Object(char *objPtr)
+    {
+        obj_    = objPtr;
+
+        header_ = (DataHeader *) obj_;
+
+        val_     = (T *) (obj_ + sizeof(DataHeader));
+    }
+
     explicit Object(std::nullptr_t) {}
 
-    ~Object() = default;  // this method should be changed
+    ~Object()
+    {
+        Release();
+    }
 
     // copy semantic
-    Object([[maybe_unused]] const Object<T> &other) {}
+    Object([[maybe_unused]] const Object<T> &other)
+    {
+        obj_    = other.obj_;
+        val_    = other.val_;
+        header_ = other.header_;
+
+        if (obj_ != nullptr)
+        {
+            ++(header_->refCount);
+        }
+    }
     // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
     Object<T> &operator=([[maybe_unused]] const Object<T> &other)
     {
+        Release();
+
+        obj_    = other.obj_;
+        val_    = other.val_;
+        header_ = other.header_;
+
+        if (obj_ != nullptr)
+        {
+            ++(header_->refCount);
+        }
+
         return *this;
     }
 
     // move semantic
-    Object([[maybe_unused]] Object<T> &&other) {}
+    Object([[maybe_unused]] Object<T> &&other)
+    {
+        obj_ = std::move(other.obj_);
+
+        header_ = (DataHeader *) obj_;
+
+        val_ = (T *) (obj_ + sizeof(DataHeader));
+
+        other.obj_    = nullptr;
+        other.val_       = nullptr;
+        other.header_ = nullptr;
+    }
     Object<T> &operator=([[maybe_unused]] Object<T> &&other)
     {
+        Release();
+
+        obj_ = std::move(other.obj_);
+
+        header_ = (DataHeader *) obj_;
+
+        val_ = (T *) (obj_ + sizeof(DataHeader));
+
+        other.obj_ = nullptr;
+        other.val_    = nullptr;
+        other.header_ = nullptr;
+
         return *this;
     }
 
@@ -50,12 +121,18 @@ public:
 
     size_t UseCount() const
     {
+        if (obj_ != nullptr)
+        {
+            // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete)
+            return header_->refCount;
+        }
+
         return 0;
     }
 
     bool operator==([[maybe_unused]] const Object<T> other) const
     {
-        return false;
+        return val_ == other.val_;
     }
 
     bool operator!=(const Object<T> other) const
@@ -65,19 +142,36 @@ public:
 
     bool operator==(std::nullptr_t) const
     {
-        return false;
+        return val_ == nullptr;
     }
 
     bool operator!=(std::nullptr_t) const
     {
-        return false;
+        return val_ != nullptr;
     }
 
 private:
-    // Add your constructor
+    void Release()
+    {
+        if (obj_ != nullptr)
+        {
+            if (--(header_->refCount) == 0)
+            {
+                val_->~T();
 
-    // TODO(you): Add your fields and methods here...
-    T *val_ = nullptr;  // this field can be deleted
+                delete obj_;
+
+                val_    = nullptr;
+                header_ = nullptr;
+            }
+        }
+    }
+
+    char *obj_ = nullptr;
+
+    T *val_ = nullptr;
+
+    DataHeader *header_ = nullptr;
 };
 
 #endif  // MEMORY_MANAGEMENT_REFERECNCE_COUNTING_GC_INCLUDE_OBJECT_MODLE_H

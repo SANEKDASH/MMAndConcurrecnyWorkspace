@@ -6,6 +6,7 @@
 #include "base/macros.h"
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 template <size_t ONE_MEM_POOL_SIZE, size_t... SLOTS_SIZES>
 class RunOfSlotsAllocator {
@@ -152,9 +153,20 @@ public:
 
         std::sort(slotsSizes.begin(), slotsSizes.end());
 
-        for (size_t slotSize : slotsSizes)
+        size_t slotsCount = std::log2(slotsSizes.back()) + 1;
+
+        for (int i = 0; i < slotsCount; i++)
         {
-            pools_.push_back(new RunOfSlotsMemoryPool<ONE_MEM_POOL_SIZE> {slotSize});
+            // NOLINTNEXTLINE(hicpp-signed-bitwise)
+            if (std::find(slotsSizes.begin(), slotsSizes.end(), 1U << i) != slotsSizes.end())
+            {
+                // NOLINTNEXTLINE(hicpp-signed-bitwise)
+                pools_.push_back(new RunOfSlotsMemoryPool<ONE_MEM_POOL_SIZE> {1U << i});
+            }
+            else
+            {
+                pools_.push_back(nullptr);
+            }
         }
     }
 
@@ -172,15 +184,15 @@ public:
     template <class T = uint8_t>
     T *Allocate()
     {
-        for (RunOfSlotsMemoryPool<ONE_MEM_POOL_SIZE> *pool : pools_)
+
+        size_t slotPos = std::log2(sizeof(T));
+
+        if (slotPos >= pools_.size())
         {
-            if (sizeof(T) <= pool->GetEntrySize())
-            {
-                return pool->template Allocate<T>();
-            }
+            return nullptr;
         }
 
-        return nullptr;
+        return pools_[slotPos]->template Allocate<T>();
     }
 
     void Free([[maybe_unused]] void *ptr)

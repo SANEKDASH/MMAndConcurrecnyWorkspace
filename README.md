@@ -16,4 +16,4 @@ Here you can find tasks you can do. They are placed in `memory_managemend` and `
 
 Completed tasks are stored in coresponding branches. 
 
-For example: you can see the implementation of __lock free stack data__ structure in branch [lock_free_stack](https://github.com/SANEKDASH/MMAndConcurrecnyWorkspace/tree/lock_free_stack). 
+For example: you can see the implementation of __lock free stack__ data structure in branch [lock_free_stack](https://github.com/SANEKDASH/MMAndConcurrecnyWorkspace/tree/lock_free_stack). 

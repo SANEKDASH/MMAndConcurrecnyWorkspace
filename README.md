@@ -15,4 +15,5 @@ sudo apt install g++ cmake clang-format clang-tidy-14
 Here you can find tasks you can do. They are placed in `memory_managemend` and `concurrency` dirs. We recomend you to start with mm tasks.
 
 Completed tasks are stored in coresponding branches. 
-For example: you can see the implementation of lock free stack data in branch 'lock_free_stack'. 
+
+For example: you can see the implementation of lock free stack data structure in branch [lock_free_stack](https://github.com/SANEKDASH/MMAndConcurrecnyWorkspace/tree/lock_free_stack). 
